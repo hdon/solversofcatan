@@ -1,0 +1,98 @@
+solversofcatan
+
+a machine intelligence project to play settlers of catan using only feed-forward
+neural networks.
+
+settlers of catan game board:
+
+randomized hexagonal grid where each CELL represents a type of RESOURCE, its
+probability of paying out on any given turn, and those CELLs which will pay out
+in time with it. each vertex is a place where a SETTLEMENT can be placed. each
+SETTLEMENT is adjacent three, two, or one hexagonal CELLs. each edge is
+a place where a ROAD can be placed. SETTLEMENTs can only be placed at vertices
+where one's own ROADs are adjacent. only one SETTLEMENT or CITY can occupy a
+single vertex. only a single ROAD can occupy a single edge.
+
+setting up a game of settlers of catan:
+
+1) the values of each CELL are ordered randomly
+2) all players are arranged in a random series.
+3) in order each PLAYER places a SETTLEMENT on the board and one adjoining ROAD
+4) then in reverse order each player places a SETTLEMENT on the board and one
+adjoining ROAD
+5) setup is complete and the first PLAYER in the series begins the main phase of
+the game.
+
+main phase:
+
+1) players take turns in order of the aformentioned series until one PLAYER
+achieves a SCORE >= 12
+
+PLAYER's turn:
+
+1) 2d6 are rolled
+
+2a) if 7 is rolled, any PLAYER with 8 or more RESOURCEs must discard half of
+them
+
+2b) if another number is rolled, SETTLEMENTs and cities adjacent to hexagonal
+CELLs which possess as their activation number the rolled number pay
+out to any players who have adjacent SETTLEMENTs or cities. CELLS with THIEF do
+not pay out any RESOURCEs when the die rolls their number.
+
+3) the PLAYER may TRADE, BUILD, and ACTIVATE prosperity cards until he is
+satisfied (how deterministic/simplistic we can make this for the purpose of our
+machine learning application remains an unanswered question.)
+
+3a) a ROAD can be built adjacent to any other ROAD that belongs to that PLAYER.
+if after building the ROAD, the longest path between VERTEXes along ROADs
+belonging to that PLAYER that does not revisit any ROADs is the longest such
+path for any given PLAYER, then the PLAYER acquires the LONGEST ROAD card, worth
+2 POINTS as long as it remains in his possession.
+
+3b) a SETTLEMENT can be built adjacent to any ROAD that belongs to that PLAYER,
+but not immediately adjacent any other SETTLEMENT or CITY
+
+3c) a SOLDIER may be activated. when activated, if the total count of SOLDIERs
+activated by this PLAYER is greater than the number of any other PLAYER, they
+take possession of the STRONGEST ARMY card worth 2 POINTS as long as it is in
+their possession. if this does not WIN the game, the PLAYER may move the THIEF
+to any resource CELL of his choosing.
+
+3d) any time the PLAYER gains POINTs, if he has 12 or more POINTs then the game
+is over and the PLAYER has WON.
+
+4) the PLAYER's turn has ended
+
+
+
+Trade and building:
+
+Part of the purpose of this project is to determine of playing settlers of catan
+can be done using only feed-forward neural networks. the obvious challenge is in
+mapping the state of the game to the neural network's inputs, and similarly,
+interpretting the network's outputs as moves to be made in the game.
+
+Another challenge to face is simplifying the game without doing harm to it, in
+order that the simulation can be more efficient and the code simpler.
+
+Trade:
+
+maybe we can somehow assign a scalar value to any resource the player currently
+possesses, or might come to possess in the next turn. but this seems dumb.
+though earlier I hoped that something like this would allow us to simplify the
+trading logic.
+
+maybe a better way is to perform some kind of exhaustive search: enumerate all
+possible trades with the active player, setting them against the network's
+inputs, and then checking to see if a given output is set. this approach might
+simplify the output layer to a simple yes/no. maybe such a simplification could
+be made against the entire game: enumerate all possible moves, and then output
+affirmative/negative, obey some threshold, then sort the moves by order of
+strength.
+
+the only problem with this is that an exhaustive search of all possible moves,
+particularly trades, might be too inefficient and expensive and slow down the
+work too much.
+
+still, its simplicity is so attractive to me, that i think i will try it.

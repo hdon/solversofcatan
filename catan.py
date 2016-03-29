@@ -153,7 +153,7 @@ class Catan:
         cs = FB_RESET+'*' if cs != NOSUCHCAMP else (' ' if land != OCEAN else colorama.Back.BLUE+colorama.Fore.WHITE+colorama.Style.BRIGHT+'V')
         #land = '..%02d.' % land
         if 1 or land >= 0:
-          land = LAND_ART[land][y % 2]
+          land = LAND_ART[land][(y+1) % 2]
           #iLand = land
           #land = LAND_COLORS[land]
           #land = ''

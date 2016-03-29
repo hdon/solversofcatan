@@ -1,4 +1,4 @@
-import random, sys, colorama
+import random, sys, colorama, itertools
 F_YELLOW = colorama.Fore.YELLOW
 F_RED = colorama.Fore.RED
 B_YELLOW = colorama.Back.YELLOW
@@ -150,7 +150,13 @@ class Catan:
           land = (y - 1) // 2 * w + x
           land = LAND[land][0]
 
-        cs = FB_RESET+'*' if cs != NOSUCHCAMP else (' ' if land != OCEAN else colorama.Back.BLUE+colorama.Fore.WHITE+colorama.Style.BRIGHT+'V')
+        if cs == NOSUCHCAMP:
+          cs = colorama.Back.BLUE+colorama.Fore.WHITE+colorama.Style.BRIGHT+'V'
+        elif cs & CAMPAVAILMASK == CAMPAVAILABLE:
+          cs = FB_RESET+'*'
+        else:
+          cs = '%s%d' % (FB_RESET, cs & PLAYERMASK)
+          
         #land = '..%02d.' % land
         if 1 or land >= 0:
           land = LAND_ART[land][(y+1) % 2]
@@ -168,6 +174,57 @@ class Catan:
         sys.stdout.write(segment)
       sys.stdout.write('\n')
 
+  def randomInit(self, numPlayers):
+    self.numPlayers = numPlayers
+    remainingSites = list(itertools.product(xrange(self.w + 1), xrange((self.h + 1) * 2)))
+    print remainingSites
+    random.shuffle(remainingSites)
+    for player in xrange(numPlayers):
+      player = 1
+      numSettlements = 2
+      while numSettlements:
+        x, y = remainingSites.pop()
+        if self.getCampsite(x, y) & CAMPAVAILMASK != CAMPAVAILABLE:
+          continue
+        #print 'placing', x, y, player
+        self.placeSettlement(x, y, player)
+        numSettlements -= 1
+  
+  def getCampsite(self, x, y):
+    return self.campSites[self.indexCampsite(x, y)]
+
+  def setCampsite(self, x, y, value, mask=0):
+    index = self.indexCampsite(x, y)
+    self.campSites[index] = (self.campSites[index] & mask) | value
+
+  def blockNearbyCampsite(self,x , y):
+    if x < 0 or self.w*2 <= x or y < 0 or (self.h+1)*2 <= y:
+      print 'cant block nearby campsite', x, y
+      return
+    if self.getCampsite(x, y) & NOSUCHCAMP == 0:
+      self.setCampsite(x, y, CAMPOFFLIMITS, ~CAMPAVAILMASK)
+
+  def indexCampsite(self, x, y):
+    return y * (self.w + 1) + x
+
+  def neighborsOf(self, x, y):
+    x2 = x + ( -1 if (y+1) & 2 else 1 )
+    y2 = y + ( -1 if  y    & 1 else 1 )
+    yield x, y-1
+    yield x, y+1
+    yield x2, y2
+    
+  def placeSettlement(self, x, y, player):
+    if self.getCampsite(x, y) & CAMPAVAILMASK != CAMPAVAILABLE:
+      raise IndexError('CAMP UNAVAILABLE')
+    if player < PLAYER0 or player > PLAYER3:
+      raise ValueError('NO SUCH PLAYER')
+
+    self.setCampsite(x, y, CAMPOFFLIMITS | player, ~CAMPAVAILMASK)
+
+    for x, y in self.neighborsOf(x, y):
+      self.blockNearbyCampsite(x, y)
+
   def vertexIsAdjacentToTile(v, t):
     vr = v / (2 * self.w) 
     tr = t / self.w * 2
@@ -184,4 +241,6 @@ class Catan:
     # For now we just randomly place initial settlements and roads
     
 catan = Catan()
+catan.randomInit(4)
 catan.printBoard()
+print

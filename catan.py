@@ -30,11 +30,11 @@ LAND_ART = [
 , r'%s       %s' % (BRIGHT_YELLOW_YELLOW, FB_RESET)
 ,   r'%s   %s'   % (BRIGHT_YELLOW_YELLOW, FB_RESET)
 ],[ # WOOD
-    r'%s8|8%s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-, r'%s|8|8|8|%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-, r'%s8|8|8|8%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-, r'%s|8|8|8|%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-,   r'%s8|8%s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+    r'%s   %s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+, r'%s  88888%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+, r'%s8888888%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+, r'%s8888|||%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+,   r'%s|||%s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
 ],[ # CLAY
     r'%s/_/%s'   % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 , r'%s \/ \/ %s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
@@ -55,10 +55,10 @@ LAND_ART = [
 ,   r'%s///%s'   % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ],[ # STONE
     r'%s /\%s'   % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
-, r'%s////\\\%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
-, r'%s////\\\%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
-, r'%s////\\\%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
-,   r'%s//\%s'   % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
+, r'%s  //\\ %s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
+, r'%s\///\\/%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
+, r'%s\\//\//%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
+,   r'%s\//%s'   % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 ],[ # OCEAN
     r'%s%s%svvv%s'   % (colorama.Fore.WHITE, colorama.Back.BLUE, colorama.Style.BRIGHT, FB_RESET)
 , r'%s%s%svvvvvvv%s' % (colorama.Fore.WHITE, colorama.Back.BLUE, colorama.Style.BRIGHT, FB_RESET)

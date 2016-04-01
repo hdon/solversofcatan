@@ -40,41 +40,42 @@ LAND_COLORS = [
 #'ocean:'
 
 BRIGHT_YELLOW_YELLOW = colorama.Fore.BLACK + colorama.Back.YELLOW + colorama.Style.BRIGHT
+THIEF_SPACES = [' ', '8', '_', ' ', '/', '/']
 LAND_ART = [
   [ # SAND
     r'%s   %s'   % (BRIGHT_YELLOW_YELLOW, FB_RESET)
 , r'%s       %s' % (BRIGHT_YELLOW_YELLOW, FB_RESET)
-, r'%s       %s' % (BRIGHT_YELLOW_YELLOW, FB_RESET)
+, r'%s  %%s    %s' % (BRIGHT_YELLOW_YELLOW, FB_RESET)
 , r'%s       %s' % (BRIGHT_YELLOW_YELLOW, FB_RESET)
 ,   r'%s   %s'   % (BRIGHT_YELLOW_YELLOW, FB_RESET)
 ],[ # WOOD
     r'%s   %s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
 , r'%s  88888%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-, r'%s88%s%%02d%s888%s' % (F_BLACK + B_GREEN, F_WHITE, F_BLACK, FB_RESET)
+, r'%s8%%%%s%s%%02d%s888%s' % (F_BLACK + B_GREEN, F_WHITE, F_BLACK, FB_RESET)
 , r'%s8888|||%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
 ,   r'%s|||%s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
 ],[ # CLAY
     r'%s/_/%s'   % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 , r'%s \/ \/ %s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
-, r'%s/_%%02d_//%s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
+, r'%s/%%%%s%%02d_//%s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 , r'%s/ \/ \/%s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 ,   r'%s///%s'   % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 ],[ # WOOL
     r'%s   %s'   % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 , r'%s       %s' % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
-, r'%s  %%02d;  %s' % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
+, r'%s %%%%s%%02d;  %s' % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 , r'%s.,;:   %s' % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ,   r'%s:" %s'   % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ],[ # WHEAT
     r'%s///%s'   % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 , r'%s///////%s' % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
-, r'%s//%%02d///%s' % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
+, r'%s/%%%%s%%02d///%s' % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 , r'%s///////%s' % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ,   r'%s///%s'   % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ],[ # STONE
     r'%s /\%s'   % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 , r'%s  //\\ %s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
-, r'%s\/%%02d\\/%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
+, r'%s\%%%%s%%02d\\/%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 , r'%s\\//\//%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 ,   r'%s\//%s'   % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 ],[ # OCEAN
@@ -128,6 +129,9 @@ def intersectRect(x0, y0, x1, y1):
 
 class Catan:
   def __init__(self):
+    self.w = 6
+    self.h = 5
+
     self.players = map(Settler, xrange(4))
 
     # http://pop.h-cdn.co/assets/15/08/1424387153-catan.jpg
@@ -143,9 +147,18 @@ class Catan:
 
     random.shuffle(landTypes)
 
-    desert = random.randint(0, 19) # inclusive range
+    desert = random.randint(0, 18) # inclusive range
     landTypes.insert(desert, SAND)
     landWealth.insert(desert, 0)
+
+    thief_index = \
+      desert + 1 if desert < 3  else \
+      desert + 3 if desert < 7  else \
+      desert + 5 if desert < 12 else \
+      desert + 6 if desert < 16 else \
+      desert + 9
+
+    self.thief = (thief_index % self.w, thief_index // self.w)
 
     i = iter(zip(landTypes, landWealth))
     def ocean():
@@ -190,9 +203,6 @@ class Catan:
     ,   b,  b,  g,  g,  g,  g,  g,  g,  b,  b,  b,  b
     ]
 
-    self.w = 6
-    self.h = 5
-
     # no need to complicate routes with many different flags and values
     # the campsites tell us all we need to know about where roads can be
     # built.
@@ -219,11 +229,14 @@ class Catan:
                 colorama.Fore.WHITE, colorama.Back.BLUE, colorama.Style.BRIGHT, FB_RESET))
 
             for x in xrange(w):
+              land_x = x
+              land_y = (y - 1) // 2
+              land_index = land_y * w + x
               if y == 0 or y == h*2 + 1 or x == w:
                 land, landNumber = OCEAN, 0
               else:
                 land = (y - 1) // 2 * w + x
-                land, landNumber = LAND[land]
+                land, landNumber = LAND[land_index]
               road = self.getRoad(x, y)
               if road & CAMP_VOID:
                 sys.stdout.write(B_BLUE + F_WHITE + BRIGHT + 'W' + FB_RESET)
@@ -236,6 +249,13 @@ class Catan:
               landSegment = LAND_ART[land][2]
               if land >= WOOD and land <= STONE:
                 landSegment = landSegment % landNumber
+              if land >= SAND and land <= STONE:
+                if self.thief[0] == land_x and self.thief[1] == land_y:
+                  landSegment = landSegment % 'X'
+                else:
+                  landSegment = landSegment % THIEF_SPACES[land]
+              else:
+                pass
               sys.stdout.write(landSegment)
               #sys.stdout.write('%s%s%02d..' % (road_a, land))
           else:
@@ -468,3 +488,4 @@ catan.randomInit(4)
 catan.dumpCampSites()
 catan.dumpLand()
 catan.printBoard()
+print catan.thief

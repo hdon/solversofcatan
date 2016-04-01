@@ -50,31 +50,31 @@ LAND_ART = [
 ],[ # WOOD
     r'%s   %s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
 , r'%s  88888%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-, r'%s8888888%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+, r'%s88%s%%02d%s888%s' % (F_BLACK + B_GREEN, F_WHITE, F_BLACK, FB_RESET)
 , r'%s8888|||%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
 ,   r'%s|||%s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
 ],[ # CLAY
     r'%s/_/%s'   % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 , r'%s \/ \/ %s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
-, r'%s/_//_//%s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
+, r'%s/_%%02d_//%s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 , r'%s/ \/ \/%s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 ,   r'%s///%s'   % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 ],[ # WOOL
     r'%s   %s'   % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 , r'%s       %s' % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
-, r'%s   .;  %s' % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
+, r'%s  %%02d;  %s' % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 , r'%s.,;:   %s' % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ,   r'%s:" %s'   % (colorama.Fore.WHITE + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ],[ # WHEAT
     r'%s///%s'   % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 , r'%s///////%s' % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
-, r'%s///////%s' % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
+, r'%s//%%02d///%s' % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 , r'%s///////%s' % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ,   r'%s///%s'   % (colorama.Fore.YELLOW + colorama.Back.GREEN + colorama.Style.BRIGHT, FB_RESET)
 ],[ # STONE
     r'%s /\%s'   % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 , r'%s  //\\ %s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
-, r'%s\///\\/%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
+, r'%s\/%%02d\\/%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 , r'%s\\//\//%s' % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 ,   r'%s\//%s'   % (colorama.Fore.BLACK + colorama.Back.WHITE + colorama.Style.BRIGHT, FB_RESET)
 ],[ # OCEAN
@@ -221,10 +221,10 @@ class Catan:
 
             for x in xrange(w):
               if y == 0 or y == h*2 + 1 or x == w:
-                land = OCEAN
+                land, landNumber = OCEAN, 0
               else:
                 land = (y - 1) // 2 * w + x
-                land = LAND[land][0]
+                land, landNumber = LAND[land]
               road = self.getRoad(x, y)
               if road & CAMP_VOID:
                 sys.stdout.write(B_BLUE + F_WHITE + BRIGHT + 'W' + FB_RESET)
@@ -234,7 +234,10 @@ class Catan:
                 else:
                   road_a = '|'
                 sys.stdout.write(FB_RESET + F_MAGENTA + road_a)
-              sys.stdout.write(LAND_ART[land][2])
+              landSegment = LAND_ART[land][2]
+              if land >= WOOD and land <= STONE:
+                landSegment = landSegment % landNumber
+              sys.stdout.write(landSegment)
               #sys.stdout.write('%s%s%02d..' % (road_a, land))
           else:
             sys.stdout.write(

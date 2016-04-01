@@ -142,7 +142,6 @@ class Catan:
     landWealth = [ 5, 2, 6, 8,10, 9, 3, 3,11, 4, 8, 4, 6, 5,10,11,12, 9]
 
     random.shuffle(landTypes)
-    random.shuffle(landWealth)
 
     desert = random.randint(0, 19) # inclusive range
     landTypes.insert(desert, SAND)

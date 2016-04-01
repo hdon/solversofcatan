@@ -1,10 +1,28 @@
 import random, sys, colorama, itertools
-F_YELLOW = colorama.Fore.YELLOW
-F_RED = colorama.Fore.RED
+
+# Term codes
+B_BLACK = colorama.Back.BLACK
+B_BLUE = colorama.Back.BLUE
+B_CYAN = colorama.Back.CYAN
+B_GREEN = colorama.Back.GREEN
+B_MAGENTA = colorama.Back.MAGENTA
+B_RED = colorama.Back.RED
+B_RESET = colorama.Back.RESET
+B_WHITE = colorama.Back.WHITE
 B_YELLOW = colorama.Back.YELLOW
 
+F_BLACK = colorama.Fore.BLACK
+F_BLUE = colorama.Fore.BLUE
+F_CYAN = colorama.Fore.CYAN
+F_GREEN = colorama.Fore.GREEN
+F_MAGENTA = colorama.Fore.MAGENTA
+F_RED = colorama.Fore.RED
 F_RESET = colorama.Fore.RESET
-B_RESET = colorama.Back.RESET
+F_WHITE = colorama.Fore.WHITE
+F_YELLOW = colorama.Fore.YELLOW
+
+BRIGHT = colorama.Style.BRIGHT
+
 FB_RESET = F_RESET + B_RESET
 #FB_RESET = ''
 
@@ -161,15 +179,15 @@ class Catan:
 
     self.routes = [
         b,  b,  g,  g,  g,  g,  g,  g,  b,  b,  b,  b # 12
-    , b,      g,      g,      g,      g,      b,      b # 7
+    , b,      g,      g,      g,      g,      b
     ,   b,  g,  g,  g,  g,  g,  g,  g,  g,  b,  b,  b
-    ,     g,      g,      g,      g,      g,      b,      b
+    ,     g,      g,      g,      g,      g,      b
     ,   g,  g,  g,  g,  g,  g,  g,  g,  g,  g,  b,  b
-    , g,      g,      g,      g,      g,      g,      g
+    , g,      g,      g,      g,      g,      g
     ,   g,  g,  g,  g,  g,  g,  g,  g,  g,  g,  b,  b
-    ,     g,      g,      g,      g,      g,      b,      g
+    ,     g,      g,      g,      g,      g,      b
     ,   b,  g,  g,  g,  g,  g,  g,  g,  g,  b,  b,  b
-    , b,      g,      g,      g,      g,      b,      g
+    , b,      g,      g,      g,      g,      b
     ,   b,  b,  g,  g,  g,  g,  g,  g,  b,  b,  b,  b
     ]
 
@@ -207,11 +225,15 @@ class Catan:
               else:
                 land = (y - 1) // 2 * w + x
                 land = LAND[land][0]
-              if self.getRoad(x, y) & CAMP_VOID:
-                road_a = colorama.Back.BLUE + colorama.Style.BRIGHT + 'W' + FB_RESET
+              road = self.getRoad(x, y)
+              if road & CAMP_VOID:
+                sys.stdout.write(B_BLUE + F_WHITE + BRIGHT + 'W' + FB_RESET)
               else:
-                road_a = '|'
-              sys.stdout.write(road_a)
+                if road & CAMP_WHO_MASK:
+                  road_a = '%01d' % (road & CAMP_WHO_MASK)
+                else:
+                  road_a = '|'
+                sys.stdout.write(FB_RESET + F_MAGENTA + road_a)
               sys.stdout.write(LAND_ART[land][2])
               #sys.stdout.write('%s%s%02d..' % (road_a, land))
           else:
@@ -225,10 +247,17 @@ class Catan:
             for x in xrange(w*2):
               # top or bottom of hex?
               tobo = (y // 2 + x) & 1
-              if self.getRoad(x, y) & CAMP_VOID:
+              road = self.getRoad(x, y)
+              if road & CAMP_VOID:
                 road_a = colorama.Back.BLUE + colorama.Style.BRIGHT + 'W' + FB_RESET
               else:
-                road_a = '\\' if (y // 2 + x) & 1 else '/'
+                routePlayer = road & CAMP_WHO_MASK
+                if routePlayer:
+                  road_a = '%01d' % routePlayer
+                else:
+                  road_a = '\\' if (y // 2 + x) & 1 else '/'
+                road_a = FB_RESET + F_MAGENTA + BRIGHT + road_a
+
               land = self.getLandTypeOrOcean(
                 x // 2,
                 y // 2 - (1 if tobo else 0)
@@ -255,12 +284,13 @@ class Catan:
 
             if cs == CAMP_VOID:
               cs = colorama.Back.BLUE+colorama.Fore.WHITE+colorama.Style.BRIGHT+'V'
-            elif cs & CAMP_WHO_MASK == CAMP_BLOCKED:
-              cs = FB_RESET+'+'
-            elif cs & CAMP_WHO_MASK == CAMP_FREE:
-              cs = FB_RESET+'*'
             else:
-              cs = '%s%d' % (FB_RESET, cs & CAMP_WHO_MASK)
+              if cs & CAMP_WHO_MASK == CAMP_BLOCKED:
+                cs = FB_RESET + '+'
+              elif cs & CAMP_WHO_MASK == CAMP_FREE:
+                cs = FB_RESET + '*'
+              else:
+                cs = FB_RESET + '%d' % (cs & CAMP_WHO_MASK)
               
             #land = '..%02d.' % land
             if 1 or land >= 0:
@@ -333,9 +363,36 @@ class Catan:
     yield x, y-1
     yield x, y+1
     yield x2, y2
-    
+
+  def roadsTo(self, x, y):
+    stagger = (y+1) & 2 == 0
+    legs_y = y - (y & 1)
+    leg_dx = 1 if stagger else -1
+
+    for rx, ry in [
+      (x, y - (y & 1 ^ 1))
+    , (x * 2,          legs_y)
+    , (x * 2 + leg_dx, legs_y)
+    ]:
+      if self.roadInBounds(rx, ry):
+        print 'road to %d,%d: %d,%d' % (x, y, rx, ry)
+        yield rx, ry
+      else:
+        print 'daor to %d,%d: %d,%d' % (x, y, rx, ry)
+
+  def placeRoad(self, x, y, player):
+    '''Place a road if it is allowed; implement side-effects'''
+    # TODO longest roaD
+    if player < PLAYER1 or player > PLAYER6:
+      raise ValueError('NO SUCH PLAYER')
+    if self.getRoad(x, y) & CAMP_FREE_MASK != CAMP_FREE:
+      raise IndexError('ROAD UNAVAILABLE')
+
+    self.setRoad(x, y, player, ~CAMP_WHO_MASK)
+
   def placeSettlement(self, x, y, player):
     '''Place a settlement if it is allowed; implement side-effects'''
+    # TODO bump score
     if self.getCampsite(x, y) & CAMP_FREE_MASK != CAMP_FREE:
       raise IndexError('CAMP UNAVAILABLE')
     if player < PLAYER1 or player > PLAYER6:
@@ -343,8 +400,12 @@ class Catan:
 
     self.setCampsite(x, y, player, ~CAMP_WHO_MASK)
 
-    for x, y in self.neighborsOf(x, y):
-      self.blockNearbyCampsite(x, y)
+    for nx, ny in self.neighborsOf(x, y):
+      self.blockNearbyCampsite(nx, ny)
+
+    for rx, ry in self.roadsTo(x, y):
+      if self.getRoad(rx, ry) & CAMP_FREE_MASK == CAMP_FREE:
+        self.placeRoad(rx, ry, player)
 
   def campsitesOfTile(self, x, y):
     '''Retrieve campsites lying on a given land hex'''
@@ -354,6 +415,13 @@ class Catan:
       for y in range((h+1)*2):
         yield x, y
 
+  def roadInBounds(self, x, y):
+    return \
+      y >= 0 and \
+      y < (self.h + 1) * 2 - 1 and \
+      x >= 0 and \
+      x < (self.w if y & 1 else self.w * 2)
+    
   # Maybe this could be useful somewhere...?
   def filterCampSiteBounds(self):
     '''Decorate a member function with this I guess'''
@@ -365,8 +433,19 @@ class Catan:
       return filterCampSiteBounds
     return filterCampSiteBounds
 
+  def getRoadIndex(self,x , y):
+    if y < 0 or y >= (self.h + 1) * 2 - 1 \
+    or x < 0 or x >= (self.w if y & 1 else self.w * 2):
+      raise IndexError('road index out of bounds')
+    return y // 2 * self.w * 3 + (self.w * 2 if y & 1 else 0) + x
+
   def getRoad(self, x, y):
-    return self.routes[ y // 2 * (self.w * 3 + 1) + (self.w * 2 if y & 1 else 0) + x ]
+    index = self.getRoadIndex(x, y)
+    return self.routes[ index ]
+
+  def setRoad(self, x, y, value, mask=0):
+    index = self.getRoadIndex(x, y)
+    self.routes[index] = (self.routes[index] & mask) | value
 
   def dumpCampSites(self):
     print 'dumpCampSites():'
@@ -382,41 +461,8 @@ class Catan:
       print
 
 catan = Catan()
-#for y in xrange(catan.h * 2 + 1):
-#  for x in xrange(catan.w if y & 1 else catan.w * 2):
-#    #sys.stdout.write('%dx%d ' % (x, y))
-#    if catan.getRoad(x, y) & CAMP_VOID:
-#      sys.stdout.write('.')
-#    else:
-#      sys.stdout.write('R')
-#    #sys.stdout.write('%04x ' % catan.getRoad(x, y))
-#  print
-#raise SystemExit
-
-print '-- blank init'
-#catan.dumpCampSites()
-catan.printBoard()
-
 print '-- random init'
 catan.randomInit(4)
 catan.dumpCampSites()
 catan.dumpLand()
 catan.printBoard()
-
-raise SystemExit
-catan = Catan()
-print '-- initial board'
-catan.dumpCampSites()
-catan.printBoard()
-tx = int(sys.argv[1])
-ty = int(sys.argv[2])
-
-n = 0
-for vx, vy in catan.campsitesOfTile(tx, ty):
-  catan.setCampsite(vx, vy, n | CAMPOFFLIMITS)
-  n = (n+1) % 4
-
-print '-- rect board'
-catan.dumpCampSites()
-catan.printBoard()
-print

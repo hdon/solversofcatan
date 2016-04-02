@@ -172,6 +172,15 @@ class Catan:
     , ocean(), i.next(),i.next(),i.next(), ocean(), ocean()
     ]
 
+    self.tilesByTargetNumber = {}
+    for y in xrange(self.h):
+      for x in xrange(self.w):
+        number = self.land[ y * self.w + x ][1]
+        if number:
+          if number not in self.tilesByTargetNumber:
+            self.tilesByTargetNumber[ number ] = []
+          self.tilesByTargetNumber[ number ].append((x, y))
+
     b = CAMP_VOID
     g = CAMP_FREE
     self.campSites = [
@@ -206,6 +215,14 @@ class Catan:
     # no need to complicate routes with many different flags and values
     # the campsites tell us all we need to know about where roads can be
     # built.
+
+    # Player initialization
+    self.playerResources = [ [0] * 6 ] * 4
+
+  def roll(self):
+    number = random.randint(6) + random.randint(6)
+    for x, y in self.tilesByTargetNumber[ number ]:
+      pass
 
   def printBoard(self):
     import fb
@@ -383,6 +400,16 @@ class Catan:
       raise IndexError('Campsite (%s,%s) out of bounds' % (x, y))
     return y * (self.w + 1) + x
 
+  def campsitesAtLand(self, x, y):
+    '''A generator for campsite coords adjacent to given hex tile coords'''
+    sx = x + (y & 1)
+    yield sx + 0, y * 2
+    yield  x + 0, y * 2 + 1
+    yield  x + 1, y * 2 + 1
+    yield  x + 0, y * 2 + 2
+    yield  x + 1, y * 2 + 2
+    yield sx + 0, y * 2 + 3
+
   def neighborsOf(self, x, y):
     '''A generator for campsite coords adjacent to given campsite coords'''
     x2 = x + ( -1 if (y+1) & 2 else 1 )
@@ -490,8 +517,15 @@ class Catan:
 
 catan = Catan()
 #print '-- random init'
-catan.randomInit(4)
+#catan.randomInit(4)
 #catan.dumpCampSites()
 #catan.dumpLand()
+numbers = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12]
+random.shuffle(numbers)
+for i in xrange(1, 5):
+  tn = numbers.pop()
+  for tx, ty in catan.tilesByTargetNumber[tn]:
+    for x, y in catan.campsitesAtLand(tx, ty):
+      catan.setCampsite(x, y, i, ~CAMP_WHO_MASK)
 catan.printBoard()
 #print catan.thief

@@ -218,7 +218,9 @@ class Catan:
     # built.
 
     # Player initialization
-    self.playerResources = [ [0] * 6 ] * 4
+    numPlayers = 4
+    self.playerResources = [[0 for res in xrange(OCEAN)] for player in xrange(4)]
+    self.playerSettlements = [[] for player in xrange(4)]
 
   def roll(self):
     number = random.randint(1,6) + random.randint(1,6)
@@ -234,6 +236,30 @@ class Catan:
           player = cs & CAMP_WHO_MASK
           if PLAYER1 <= player and player <= PLAYER4:
             self.givePlayerResource(player, res)
+
+  def whatCanIBuy(self, player):
+    rez = self.playerResources[player]
+    if rez[CLAY] and rez[WOOD]:
+      yield BUY_ROAD
+      if rez[WOOL] and rez[WHEAT]:
+        yield BUY_SETTLEMENT
+    if rez[STONE] >= 3 and rez[WHEAT] >= 2:
+      yield BUY_CITY
+    if rez[STONE] and rez[WOOL] and rez[WHEAT]:
+      yield BUY_DEVELOPMENT
+
+  def whereCanISettle(self, player):
+    pass
+
+  def whereCanIUpgrade(self, player):
+    pass
+
+  def whereDoMyRoadsGo(self, player):
+    for y in xrange(self.h*2+1):
+      self.placeRoad(0, y, PLAYER1)
+
+  def whereCanIDrive(self, player):
+    pass
 
   def givePlayerResource(self, player, res, n=1):
     print 'giving player', player, n, 'of', RESOURCE_STR[ res ]
@@ -470,6 +496,7 @@ class Catan:
       raise ValueError('NO SUCH PLAYER')
 
     self.setCampsite(x, y, player, ~CAMP_WHO_MASK)
+    self.playerSettlements[ player-1 ].append((x, y))
 
     for nx, ny in self.neighborsOf(x, y):
       self.blockNearbyCampsite(nx, ny)
@@ -545,4 +572,5 @@ catan.roll()
     #for x, y in catan.campsitesAtLand(tx, ty):
       #catan.setCampsite(x, y, i, ~CAMP_WHO_MASK)
 catan.printBoard()
+print catan.playerSettlements
 #print catan.thief

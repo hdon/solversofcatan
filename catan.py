@@ -98,6 +98,7 @@ WOOL = 3
 WHEAT = 4
 STONE = 5
 OCEAN = 6
+RESOURCE_STR = [ 'sand', 'wood', 'clay', 'wool', 'wheat', 'stone', 'water' ]
 
 # Vertices -- some of these also apply to roads
 CAMP_WHO_MASK   = 0x0007
@@ -220,9 +221,24 @@ class Catan:
     self.playerResources = [ [0] * 6 ] * 4
 
   def roll(self):
-    number = random.randint(6) + random.randint(6)
-    for x, y in self.tilesByTargetNumber[ number ]:
-      pass
+    number = random.randint(1,6) + random.randint(1,6)
+    print 'rolled', number
+    if number == 7:
+      pass # TODO
+    else:
+      for tx, ty in self.tilesByTargetNumber[ number ]:
+        land = self.getLand(tx, ty)
+        res = land[0]
+        for vx, vy in self.campsitesAtLand(tx, ty):
+          cs = self.getCampsite(vx, vy)
+          player = cs & CAMP_WHO_MASK
+          if PLAYER1 <= player and player <= PLAYER4:
+            self.givePlayerResource(player, res)
+
+  def givePlayerResource(self, player, res, n=1):
+    print 'giving player', player, n, 'of', RESOURCE_STR[ res ]
+    reses = self.playerResources[player-1]
+    reses[res] += n
 
   def printBoard(self):
     import fb
@@ -517,15 +533,16 @@ class Catan:
 
 catan = Catan()
 #print '-- random init'
-#catan.randomInit(4)
+catan.randomInit(4)
+catan.roll()
 #catan.dumpCampSites()
 #catan.dumpLand()
-numbers = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12]
-random.shuffle(numbers)
-for i in xrange(1, 5):
-  tn = numbers.pop()
-  for tx, ty in catan.tilesByTargetNumber[tn]:
-    for x, y in catan.campsitesAtLand(tx, ty):
-      catan.setCampsite(x, y, i, ~CAMP_WHO_MASK)
+#numbers = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12]
+#random.shuffle(numbers)
+#for i in xrange(1, 5):
+  #tn = numbers.pop()
+  #for tx, ty in catan.tilesByTargetNumber[tn]:
+    #for x, y in catan.campsitesAtLand(tx, ty):
+      #catan.setCampsite(x, y, i, ~CAMP_WHO_MASK)
 catan.printBoard()
 #print catan.thief

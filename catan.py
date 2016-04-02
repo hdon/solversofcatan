@@ -49,11 +49,11 @@ LAND_ART = [
 , r'%s       %s' % (BRIGHT_YELLOW_YELLOW, FB_RESET)
 ,   r'%s   %s'   % (BRIGHT_YELLOW_YELLOW, FB_RESET)
 ],[ # WOOD
-    r'%s   %s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-, r'%s  88888%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-, r'%s8%%%%s%s%%02d%s888%s' % (F_BLACK + B_GREEN, F_WHITE, F_BLACK, FB_RESET)
-, r'%s8888|||%s' % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
-,   r'%s|||%s'   % (colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+    r'%s   %s'   % (BRIGHT + colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+, r'%s  88888%s' % (BRIGHT + colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+, r'%s8%%%%s%s%%02d%s888%s' % (BRIGHT + F_BLACK + B_GREEN, F_WHITE, F_BLACK, FB_RESET)
+, r'%s8888|||%s' % (BRIGHT + colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
+,   r'%s|||%s'   % (BRIGHT + colorama.Fore.BLACK + colorama.Back.GREEN, FB_RESET)
 ],[ # CLAY
     r'%s/_/%s'   % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
 , r'%s \/ \/ %s' % (colorama.Fore.RED + colorama.Back.RED + colorama.Style.BRIGHT, FB_RESET)
@@ -208,15 +208,18 @@ class Catan:
     # built.
 
   def printBoard(self):
+    import fb
+    tb = fb.TermBuffer(80-19, 25)
+    out = tb.cursor()
     w = self.w
     h = self.h
     CS = self.campSites
     LAND = self.land
-    #sys.stdout.write(F_RESET + B_RESET + '\n')
+    #out.writec(F_RESET + B_RESET + '\n')
     #print self.campSites
     for y in xrange(0, (h+1)*2):
       for isRoadLine in xrange(2):
-        sys.stdout.write("%sy=%02d r=%01d " % (FB_RESET_PERMA, y, isRoadLine))
+        #out.writec("%sy=%02d r=%01d " % (FB_RESET_PERMA, y, isRoadLine))
         if isRoadLine:
           if y == (h+1)*2-1:
             continue
@@ -225,7 +228,7 @@ class Catan:
 
           if y % 2:
             if stagger:
-              sys.stdout.write('%s%s%svvVv%s' % (
+              out.writec('%s%s%svvVv%s' % (
                 colorama.Fore.WHITE, colorama.Back.BLUE, colorama.Style.BRIGHT, FB_RESET))
 
             for x in xrange(w):
@@ -239,13 +242,13 @@ class Catan:
                 land, landNumber = LAND[land_index]
               road = self.getRoad(x, y)
               if road & CAMP_VOID:
-                sys.stdout.write(B_BLUE + F_WHITE + BRIGHT + 'W' + FB_RESET)
+                out.writec(B_BLUE + F_WHITE + BRIGHT + 'W' + FB_RESET)
               else:
                 if road & CAMP_WHO_MASK:
                   road_a = '%01d' % (road & CAMP_WHO_MASK)
                 else:
                   road_a = '|'
-                sys.stdout.write(FB_RESET + F_MAGENTA + road_a)
+                out.writec(FB_RESET + F_MAGENTA + road_a)
               landSegment = LAND_ART[land][2]
               if land >= WOOD and land <= STONE:
                 landSegment = landSegment % landNumber
@@ -256,10 +259,10 @@ class Catan:
                   landSegment = landSegment % THIEF_SPACES[land]
               else:
                 pass
-              sys.stdout.write(landSegment)
-              #sys.stdout.write('%s%s%02d..' % (road_a, land))
+              out.writec(landSegment)
+              #out.writec('%s%s%02d..' % (road_a, land))
           else:
-            sys.stdout.write(
+            out.writec(
               colorama.Back.BLUE
             + colorama.Style.BRIGHT
             + 'ww'
@@ -285,13 +288,13 @@ class Catan:
                 y // 2 - (1 if tobo else 0)
               )
 
-              sys.stdout.write(road_a)
-              sys.stdout.write(LAND_ART[land][4 if tobo else 0])
+              out.writec(road_a)
+              out.writec(LAND_ART[land][4 if tobo else 0])
         else:
-          #sys.stdout.write('>' if y % 2 == 1 and y // 2 < h else ' ')
+          #out.writec('>' if y % 2 == 1 and y // 2 < h else ' ')
           stagger = (y+1) & 2 == 0
           if stagger:
-            sys.stdout.write('%s%s%svvvv%s' % (
+            out.writec('%s%s%svvvv%s' % (
               colorama.Fore.WHITE, colorama.Back.BLUE, colorama.Style.BRIGHT, FB_RESET))
             
           for x in xrange(0, w+1):
@@ -328,8 +331,10 @@ class Catan:
             #land = ' ' if land == OCEAN else 'x'
             segment = '%s%s' % (cs, land)
 
-            sys.stdout.write(segment)
-        sys.stdout.write('\n')
+            out.writec(segment)
+        out.writec('\n')
+    tb.printout()
+    print 'lelele: %x' % tb.mode[tb.h + 6]
     print F_RESET + B_RESET
 
   def randomInit(self, numPlayers):
@@ -341,9 +346,9 @@ class Catan:
       while numSettlements:
         x, y = remainingSites.pop()
         cs = self.getCampsite(x, y)
-        print 'valuating campsite (%d,%d) for random placement. value = 0x%04x' % (x, y, cs)
+        #print 'valuating campsite (%d,%d) for random placement. value = 0x%04x' % (x, y, cs)
         if cs & CAMP_FREE_MASK != CAMP_FREE:
-          print "  can't use"
+          #print "  can't use"
           continue
         #print 'placing', x, y, player
         self.placeSettlement(x, y, player)
@@ -397,10 +402,11 @@ class Catan:
     , (x * 2 + leg_dx, legs_y)
     ]:
       if self.roadInBounds(rx, ry):
-        print 'road to %d,%d: %d,%d' % (x, y, rx, ry)
+        #print 'road to %d,%d: %d,%d' % (x, y, rx, ry)
         yield rx, ry
       else:
-        print 'daor to %d,%d: %d,%d' % (x, y, rx, ry)
+        #print 'daor to %d,%d: %d,%d' % (x, y, rx, ry)
+        pass
 
   def placeRoad(self, x, y, player):
     '''Place a road if it is allowed; implement side-effects'''
@@ -483,9 +489,9 @@ class Catan:
       print
 
 catan = Catan()
-print '-- random init'
+#print '-- random init'
 catan.randomInit(4)
-catan.dumpCampSites()
-catan.dumpLand()
+#catan.dumpCampSites()
+#catan.dumpLand()
 catan.printBoard()
-print catan.thief
+#print catan.thief

@@ -281,7 +281,7 @@ class Catan:
                   road_a = '%01d' % routePlayer
                 else:
                   road_a = '\\' if (y // 2 + x) & 1 else '/'
-                road_a = FB_RESET + F_MAGENTA + BRIGHT + road_a
+                road_a = FB_RESET + F_MAGENTA + road_a
 
               land = self.getLandTypeOrOcean(
                 x // 2,

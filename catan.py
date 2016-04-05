@@ -1,4 +1,5 @@
 import random, sys, colorama, itertools
+from math import ceil
 
 # Term codes
 B_BLACK = colorama.Back.BLACK
@@ -100,6 +101,13 @@ STONE = 5
 OCEAN = 6
 RESOURCE_STR = [ 'sand', 'wood', 'clay', 'wool', 'wheat', 'stone', 'water' ]
 
+# TODO maybe this aren't useful
+BUY_SETTLEMENT  = 'BUY_SETTLEMENT'
+BUY_ROAD        = 'BUY_ROAD'
+BUY_CITY        = 'BUY_CITY'
+BUY_DEVELOPMENT = 'BUY_DEVELOPMENT'
+END_TURN        = 'END_TURN'
+
 # Vertices -- some of these also apply to roads
 CAMP_WHO_MASK   = 0x0007
 PLAYER1         = 0x0001
@@ -128,10 +136,25 @@ def intersectRect(x0, y0, x1, y1):
     return intersectRect
   return intersectRect
 
+class IllegalMoveError(Exception):
+  def __init__(self, msg):
+    Exception.__init__(self, msg)
+
+class CampUnavailableForSettlementError(IllegalMoveError):
+  def __init__(self, x, y, cs):
+    self.params = x, y, cs
+  def __str__(self):
+    return 'Illegal Move: Camp at (%d, %d) With Value %04x Unavailable for Settlement' % self.params
+
+class NotActivePlayerError(Exception):
+  def __init__(self, requestedPlayer, actualPlayer):
+    Exception.__init__(self)
+
 class Catan:
   def __init__(self):
     self.w = 6
     self.h = 5
+    self.vh = (self.h + 1) * 2 # :(
 
     self.players = map(Settler, xrange(4))
 
@@ -221,10 +244,48 @@ class Catan:
     numPlayers = 4
     self.playerResources = [[0 for res in xrange(OCEAN)] for player in xrange(4)]
     self.playerSettlements = [[] for player in xrange(4)]
+    self.activePlayer = PLAYER1
+
+  def playerBuildSettlement(self, pos, player):
+    # validate active player
+    if player != self.activePlayer:
+      raise NotActivePlayerError(player, self.activePlayer)
+
+    # check campsite bounds before doing road calculations
+    if pos[0] < 0 or self.w <= pos[0] \
+    or pos[1] < 0 or self.h <= pos[1]:
+      raise IndexError('No such campsite')
+    
+    # reserve cost of settlement
+    rez = self.playerResources[player]
+    if rez[CLAY] == 0 and rez[WOOD] == 0 and rez[WOOL] == 0 and rez[WHEAT] == 0:
+      raise IllegalMoveError()
+
+    # Does the player have a road leading to this campsite?
+    hasRoad = False
+    for rx, ry in self.roadsTo(*pos):
+      if self.getRoad(rx, ry) & CAMP_WHO_MASK == player:
+        hasRoad = True
+        break
+    if not hasRoad:
+      raise IllegalMoveError()
+
+    # placeSettlement will ensure no campsite collisions
+    self.placeSettlement(x, y, player)
+
+    # finally, deduct cost of settlement
+    rez[CLAY]  -= 1
+    rez[WOOD]  -= 1
+    rez[WOOL]  -= 1
+    rez[WHEAT] -= 1
+
+  def playerUpgradeSettlement(self, pos, player):
+    if player != self.activePlayer:
+      raise NotActivePlayerError(player, self.activePlayer)
 
   def roll(self):
     number = random.randint(1,6) + random.randint(1,6)
-    print 'rolled', number
+    #print 'rolled', number
     if number == 7:
       pass # TODO
     else:
@@ -262,7 +323,7 @@ class Catan:
     pass
 
   def givePlayerResource(self, player, res, n=1):
-    print 'giving player', player, n, 'of', RESOURCE_STR[ res ]
+    #print 'giving player', player, n, 'of', RESOURCE_STR[ res ]
     reses = self.playerResources[player-1]
     reses[res] += n
 
@@ -306,7 +367,7 @@ class Catan:
                 if road & CAMP_WHO_MASK:
                   road_a = '%01d' % (road & CAMP_WHO_MASK)
                 else:
-                  road_a = '|'
+                  road_a = ' '
                 out.writec(FB_RESET + F_MAGENTA + road_a)
               landSegment = LAND_ART[land][2]
               if land >= WOOD and land <= STONE:
@@ -339,7 +400,7 @@ class Catan:
                 if routePlayer:
                   road_a = '%01d' % routePlayer
                 else:
-                  road_a = '\\' if (y // 2 + x) & 1 else '/'
+                  road_a = ' ' if (y // 2 + x) & 1 else ' '
                 road_a = FB_RESET + F_MAGENTA + road_a
 
               land = self.getLandTypeOrOcean(
@@ -370,9 +431,9 @@ class Catan:
               cs = colorama.Back.BLUE+colorama.Fore.WHITE+colorama.Style.BRIGHT+'V'
             else:
               if cs & CAMP_WHO_MASK == CAMP_BLOCKED:
-                cs = FB_RESET + '+'
+                cs = FB_RESET + ' '
               elif cs & CAMP_WHO_MASK == CAMP_FREE:
-                cs = FB_RESET + '*'
+                cs = FB_RESET + ' '
               else:
                 cs = FB_RESET + '%d' % (cs & CAMP_WHO_MASK)
               
@@ -393,7 +454,6 @@ class Catan:
             out.writec(segment)
         out.writec('\n')
     tb.printout()
-    print 'lelele: %x' % tb.mode[tb.h + 6]
     print F_RESET + B_RESET
 
   def randomInit(self, numPlayers):
@@ -403,15 +463,20 @@ class Catan:
     for player in xrange(1, numPlayers+1):
       numSettlements = 2
       while numSettlements:
-        x, y = remainingSites.pop()
-        cs = self.getCampsite(x, y)
-        #print 'valuating campsite (%d,%d) for random placement. value = 0x%04x' % (x, y, cs)
+        cx, cy = remainingSites.pop()
+        cs = self.getCampsite(cx, cy)
+        #print 'valuating campsite (%d,%d) for random placement. value = 0x%04x' % (cx, cy, cs)
         if cs & CAMP_FREE_MASK != CAMP_FREE:
           #print "  can't use"
           continue
-        #print 'placing', x, y, player
-        self.placeSettlement(x, y, player)
+        #print 'placing', cx, cy, player
+        self.placeSettlement(cx, cy, player)
         numSettlements -= 1
+        # place adjoining road
+        for rx, ry in self.roadsTo(cx, cy):
+          if self.getRoad(rx, ry) & CAMP_WHO_MASK == CAMP_FREE:
+            self.placeRoad(rx, ry, player)
+            break
   
   def getLandTypeOrOcean(self, x, y):
     if x < 0 or x >= self.w or y < 0 or y >= self.h:
@@ -477,13 +542,28 @@ class Catan:
         #print 'daor to %d,%d: %d,%d' % (x, y, rx, ry)
         pass
 
+  def campsitesFromRoad(self, x, y):
+    '''A generator enumerating campsites by a given road'''
+    doubleRoads = y & 1 == 0
+    if doubleRoads:
+      roadDir = bool(y&2) ^ bool(x&1)
+      if roadDir:
+        yield x//2 + x%2, y+1
+        yield x//2      , y
+      else:
+        yield x//2 + x%2, y
+        yield x//2      , y+1
+    else:
+      yield x, y
+      yield x, y+1
+
   def placeRoad(self, x, y, player):
     '''Place a road if it is allowed; implement side-effects'''
     # TODO longest roaD
     if player < PLAYER1 or player > PLAYER6:
       raise ValueError('NO SUCH PLAYER')
     if self.getRoad(x, y) & CAMP_FREE_MASK != CAMP_FREE:
-      raise IndexError('ROAD UNAVAILABLE')
+      raise IllegalMoveError('ROAD UNAVAILABLE')
 
     self.setRoad(x, y, player, ~CAMP_WHO_MASK)
 
@@ -491,7 +571,7 @@ class Catan:
     '''Place a settlement if it is allowed; implement side-effects'''
     # TODO bump score
     if self.getCampsite(x, y) & CAMP_FREE_MASK != CAMP_FREE:
-      raise IndexError('CAMP UNAVAILABLE')
+      raise CampUnavailableForSettlementError(x, y, self.getCampsite(x, y))
     if player < PLAYER1 or player > PLAYER6:
       raise ValueError('NO SUCH PLAYER')
 
@@ -501,17 +581,10 @@ class Catan:
     for nx, ny in self.neighborsOf(x, y):
       self.blockNearbyCampsite(nx, ny)
 
-    for rx, ry in self.roadsTo(x, y):
-      if self.getRoad(rx, ry) & CAMP_FREE_MASK == CAMP_FREE:
-        self.placeRoad(rx, ry, player)
-
-  def campsitesOfTile(self, x, y):
-    '''Retrieve campsites lying on a given land hex'''
-    w = self.w
-    h = self.h
-    for x in range(w+1):
-      for y in range((h+1)*2):
-        yield x, y
+    # just a test
+    #for rx, ry in self.roadsTo(x, y):
+      #if self.getRoad(rx, ry) & CAMP_FREE_MASK == CAMP_FREE:
+        #self.placeRoad(rx, ry, player)
 
   def roadInBounds(self, x, y):
     return \
@@ -557,20 +630,3 @@ class Catan:
       for x in xrange(self.w):
         sys.stdout.write('%d ' % self.getLand(x, y)[0])
       print
-
-catan = Catan()
-#print '-- random init'
-catan.randomInit(4)
-catan.roll()
-#catan.dumpCampSites()
-#catan.dumpLand()
-#numbers = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12]
-#random.shuffle(numbers)
-#for i in xrange(1, 5):
-  #tn = numbers.pop()
-  #for tx, ty in catan.tilesByTargetNumber[tn]:
-    #for x, y in catan.campsitesAtLand(tx, ty):
-      #catan.setCampsite(x, y, i, ~CAMP_WHO_MASK)
-catan.printBoard()
-print catan.playerSettlements
-#print catan.thief

@@ -431,7 +431,7 @@ class Catan:
               cs = colorama.Back.BLUE+colorama.Fore.WHITE+colorama.Style.BRIGHT+'V'
             else:
               if cs & CAMP_WHO_MASK == CAMP_BLOCKED:
-                cs = FB_RESET + ' '
+                cs = FB_RESET + '-'
               elif cs & CAMP_WHO_MASK == CAMP_FREE:
                 cs = FB_RESET + ' '
               else:
@@ -607,7 +607,7 @@ class Catan:
   def getRoadIndex(self,x , y):
     if y < 0 or y >= (self.h + 1) * 2 - 1 \
     or x < 0 or x >= (self.w if y & 1 else self.w * 2):
-      raise IndexError('road index out of bounds')
+      raise IndexError('road index (%d,%d) out of bounds' % (x, y))
     return y // 2 * self.w * 3 + (self.w * 2 if y & 1 else 0) + x
 
   def getRoad(self, x, y):

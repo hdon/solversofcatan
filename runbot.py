@@ -6,17 +6,22 @@ catan = Catan()
 #print '-- random init'
 catan.randomInit(4)
 bots = map(lambda n: Bot(catan, n+1), xrange(4))
-while 1:
-  catan.roll()
-  catan.activePlayer = catan.activePlayer % 4 + 1
-  bots[catan.activePlayer-1].move()
-  catan.printBoard()
-  #print catan.playerResources
-  #c = raw_input('enter to continue')
-  #if c.startswith('q'):
-    #raise SystemExit
-  sleep(1)
-  
+try:
+  while 1:
+    catan.roll()
+    catan.activePlayer = catan.activePlayer % 4 + 1
+    bots[catan.activePlayer-1].move()
+    catan.printBoard()
+    #print catan.playerResources
+    #c = raw_input('enter to continue')
+    #if c.startswith('q'):
+      #raise SystemExit
+    #sleep(1)
+except Exception, e:
+  print 'land:', catan.land
+  print 'roads:', catan.routes
+  raise
+
 #catan.dumpCampSites()
 #catan.dumpLand()
 #numbers = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12]

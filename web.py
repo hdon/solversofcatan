@@ -3,8 +3,13 @@ import BaseHTTPServer, SocketServer, json, os, catan, mimetypes
 from bot import Bot
 port = 3000
 
-game = None
-bots = None
+def initGameAndBots():
+  global game, bots
+  game = catan.Catan()
+  game.randomInit(4)
+  bots = map(lambda n: Bot(game, n+1), xrange(4))
+
+initGameAndBots()
 
 class CatanHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
   def do_GET(self):
@@ -18,9 +23,8 @@ class CatanHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         game.activePlayer = game.activePlayer % 4 + 1
         bots[game.activePlayer-1].move()
       except:
-        game = catan.Catan()
-        game.randomInit(4)
-        bots = map(lambda n: Bot(game, n+1), xrange(4))
+        raise
+        initGameAndBots()
 
       self.send_response(200)
       self.send_header('Content-Type', 'application/json')

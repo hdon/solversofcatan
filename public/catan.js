@@ -74,6 +74,29 @@ function drawBoard()
 
   drawRoutes();
   drawCampsites();
+  drawHands();
+}
+
+function drawHands()
+{
+  var i;
+  for (i=0; i<4; i++)
+    drawHand(0, i*20 + tileFall * (game.h + 4), i);
+}
+
+function drawHand(x, y, player)
+{
+  var iRes, nRes, resources;
+  resources = game.playerResources[player];
+  for (iRes=0; iRes<resources.length; iRes++)
+  {
+    draw.fillStyle = tileColors[iRes%6];
+    for (nRes=0; nRes<resources[iRes]; nRes++)
+    {
+      draw.fillRect(x, y, 5, 5);
+      x += 6;
+    }
+  }
 }
 
 var dotsByNumber = {
@@ -254,4 +277,13 @@ function drawRoute(x, y, route)
     if (y & 2) x += 0.5;
     draw.fillRect((x+1) * tileWidth-1, (y+0.35) / 2 * tileFall + tileFall, 2, tileFall * 0.66);
   }
+}
+
+function resources()
+{
+  game.playerResources.forEach(function(rez, player) {
+    rez.forEach(function(quantity, rezType) {
+      console.log('player', player, '/', playerColors[player+1], 'has', quantity, RESOURCE_STR[rezType]);
+    });
+  });
 }

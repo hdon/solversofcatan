@@ -8,6 +8,8 @@ class Bot:
   def move(self):
     game = self.game
     for move in [ BUY_SETTLEMENT, BUY_ROAD, BUY_CITY, BUY_DEVELOPMENT, END_TURN ]:
+      if not game.canIBuy(self.player, move):
+        continue
       #print 'bot', self.player, 'evaluating move type', move
       if move == BUY_SETTLEMENT:
         # find a place to put a settlement
@@ -24,6 +26,7 @@ class Bot:
                 if game.getRoad(rx, ry) & CAMP_WHO_MASK == self.player:
                   #print 'bot', self.player, 'placing settlement at', vx, vy
                   game.placeSettlement(vx, vy, self.player)
+                  game.buy(self.player, BUY_SETTLEMENT)
                   return
             else:
               pass
@@ -47,6 +50,7 @@ class Bot:
                   road = game.getRoad(rx2, ry2)
                   if road & CAMP_FREE_MASK == CAMP_FREE:
                     game.placeRoad(rx2, ry2, self.player)
+                    game.buy(self.player, BUY_ROAD)
                     return
 
         # find a settlement that belongs to us
@@ -58,6 +62,5 @@ class Bot:
                 if game.getRoad(rx, ry) & CAMP_FREE_MASK == CAMP_FREE:
                   print 'bot', self.player, 'placing road at', rx, ry
                   game.placeRoad(rx, ry, self.player)
+                  game.buy(self.player, ROADBUY_ROAD)
                   return
-
-    raise ValueError('Bot %d out of moves!' % self.player)

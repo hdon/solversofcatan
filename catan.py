@@ -287,7 +287,18 @@ class Catan:
     number = random.randint(1,6) + random.randint(1,6)
     #print 'rolled', number
     if number == 7:
-      pass # TODO
+      # TODO thief
+      # Halve any player's resources over 8
+      # TODO allow the player to choose
+      for rez in self.playerResources:
+        if sum(rez) < 8:
+          continue
+        for iRez in xrange(len(rez)):
+          # This will actually discard more resources than are
+          # necessary, but this code is only a stand-in for
+          # allowing the player to choose which resource cards
+          # to discard.
+          rez[iRez] /= 2
     else:
       for tx, ty in self.tilesByTargetNumber[ number ]:
         land = self.getLand(tx, ty)
@@ -299,7 +310,7 @@ class Catan:
             self.givePlayerResource(player, res)
 
   def whatCanIBuy(self, player):
-    rez = self.playerResources[player]
+    rez = self.playerResources[player-1]
     if rez[CLAY] and rez[WOOD]:
       yield BUY_ROAD
       if rez[WOOL] and rez[WHEAT]:
@@ -308,6 +319,37 @@ class Catan:
       yield BUY_CITY
     if rez[STONE] and rez[WOOL] and rez[WHEAT]:
       yield BUY_DEVELOPMENT
+
+  def canIBuy(self, player, buy):
+    rez = self.playerResources[player-1]
+    if buy == BUY_ROAD:
+      return rez[WOOD] and rez[CLAY]
+    if buy == BUY_SETTLEMENT:
+      return rez[WOOD] and rez[CLAY] and rez[WOOL] and rez[WHEAT]
+    if buy == BUY_CITY:
+      return rez[STONE] >= 3 and rez[WHEAT] >= 2
+    if buy == BUY_DEVELOPMENT:
+      return rez[WOOL] and rez[WHEAT] and rez[STONE]
+
+  def buy(self, player, buy):
+    if not self.canIBuy(player, buy):
+      raise IllegalMoveError('player %s cannot afford to buy %s' % (player, buy))
+    rez = self.playerResources[player-1]
+    if buy == BUY_ROAD:
+      rez[WOOD] -= 1
+      rez[CLAY] -= 1
+    elif buy == BUY_SETTLEMENT:
+      rez[WOOD] -= 1
+      rez[CLAY] -= 1
+      rez[WOOL] -= 1
+      rez[WHEAT] -= 1
+    elif buy == BUY_CITY:
+      rez[STONE] -= 3
+      rez[WHEAT] -= 2
+    elif buy == BUY_DEVELOPMENT:
+      rez[WOOL] -= 1
+      rez[WHEAT] -= 1
+      rez[STONE] -= 1
 
   def whereCanISettle(self, player):
     pass

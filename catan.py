@@ -122,6 +122,18 @@ CAMP_SIZE_MASK  = 0x0008
 CAMP_SETTLEMENT = 0x0000
 CAMP_CITY       = 0x0008
 
+CAMP_PORT_MASK  = 0x00f0
+CAMP_PORT_NONE  = 0x0000
+CAMP_PORT_1     = 0x0010
+CAMP_PORT_2     = 0x0020
+CAMP_PORT_3     = 0x0030
+CAMP_PORT_4     = 0x0040
+CAMP_PORT_5     = 0x0050
+CAMP_PORT_6     = 0x0060
+CAMP_PORT_7     = 0x0070
+CAMP_PORT_8     = 0x0080
+CAMP_PORT_9     = 0x0090
+
 CAMP_VOID       = 0x8000 # no player can settle here
 
 CAMP_FREE_MASK  = CAMP_VOID | CAMP_WHO_MASK
@@ -205,23 +217,22 @@ class Catan:
             self.tilesByTargetNumber[ number ] = []
           self.tilesByTargetNumber[ number ].append((x, y))
 
+    self.initCampSites()
+    self.initRoutes()
+
+    # no need to complicate routes with many different flags and values
+    # the campsites tell us all we need to know about where roads can be
+    # built.
+
+    # Player initialization
+    numPlayers = 4
+    self.playerResources = [[0 for res in xrange(OCEAN)] for player in xrange(4)]
+    self.playerSettlements = [[] for player in xrange(4)]
+    self.activePlayer = PLAYER1
+
+  def initRoutes(self):
     b = CAMP_VOID
     g = CAMP_FREE
-    self.campSites = [
-         b,    g,    g,    g,    b,    b,    b
-    , b,    g,    g,    g,    g,    b,    b
-    , b,    g,    g,    g,    g,    b,    b
-    ,    g,    g,    g,    g,    g,    b,    b
-    ,    g,    g,    g,    g,    g,    b,    b
-    , g,    g,    g,    g,    g,    g,    b
-    , g,    g,    g,    g,    g,    g,    b
-    ,    g,    g,    g,    g,    g,    b,    b
-    ,    g,    g,    g,    g,    g,    b,    b
-    , b,    g,    g,    g,    g,    b,    b
-    , b,    g,    g,    g,    g,    b,    b
-    ,    b,    g,    g,    g,    b,    b,    b
-    ]
-
     self.routes = [
         b,  b,  g,  g,  g,  g,  g,  g,  b,  b,  b,  b # 12
     , b,      g,      g,      g,      g,      b
@@ -236,15 +247,32 @@ class Catan:
     ,   b,  b,  g,  g,  g,  g,  g,  g,  b,  b,  b,  b
     ]
 
-    # no need to complicate routes with many different flags and values
-    # the campsites tell us all we need to know about where roads can be
-    # built.
-
-    # Player initialization
-    numPlayers = 4
-    self.playerResources = [[0 for res in xrange(OCEAN)] for player in xrange(4)]
-    self.playerSettlements = [[] for player in xrange(4)]
-    self.activePlayer = PLAYER1
+  def initCampSites(self):
+    o = CAMP_VOID
+    z = CAMP_FREE
+    a = z | CAMP_PORT_1
+    b = z | CAMP_PORT_2
+    c = z | CAMP_PORT_3
+    d = z | CAMP_PORT_4
+    e = z | CAMP_PORT_5
+    f = z | CAMP_PORT_6
+    g = z | CAMP_PORT_7
+    h = z | CAMP_PORT_8
+    i = z | CAMP_PORT_9
+    self.campSites = [
+         o,    a,    b,    z,    o,    o,    o
+    , o,    a,    z,    b,    z,    o,    o
+    , o,    z,    z,    z,    c,    o,    o
+    ,    i,    z,    z,    z,    c,    o,    o
+    ,    i,    z,    z,    z,    z,    o,    o
+    , z,    z,    z,    z,    z,    d,    o
+    , z,    z,    z,    z,    z,    d,    o
+    ,    h,    z,    z,    z,    z,    o,    o
+    ,    h,    z,    z,    z,    e,    o,    o
+    , o,    z,    z,    z,    e,    o,    o
+    , o,    g,    z,    f,    z,    o,    o
+    ,    o,    g,    f,    z,    o,    o,    o
+    ]
 
   def playerBuildSettlement(self, pos, player):
     # validate active player

@@ -18,12 +18,15 @@ class CatanHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       self.path = '/index.html'
     if self.path == '/game.json':
 
-      try:
-        game.roll()
-        game.activePlayer = game.activePlayer % 4 + 1
-        bots[game.activePlayer-1].move()
-      except:
-        raise
+      if 0:
+        try:
+          game.roll()
+          game.activePlayer = game.activePlayer % 4 + 1
+          bots[game.activePlayer-1].move()
+        except:
+          raise
+          initGameAndBots()
+      else:
         initGameAndBots()
 
       self.send_response(200)

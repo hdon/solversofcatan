@@ -3,6 +3,7 @@ var tileHeight = 60, tileWidth = Math.sin(Math.PI / 3) * 60, tileFall = tileHeig
 var game;
 //var tileWidth = 60, tileHeight = 60;
 var tileColors = '#fc5 green #c33 #7c3 #cc2 #8c8c8c blue'.split(' ');
+var portColors = 'black #fc5 green #c33 #7c3 #cc2 #8c8c8c #07f'.split(' ');
 var playerColors = '#fff #f00 #0f0 #00f #c5c'.split(' ');
 
 var SAND = 0
@@ -31,6 +32,17 @@ var CAMP_WHO_MASK   = 0x0007
   , CAMP_FREE       = 0x0000
   ;
 
+var CAMP_PORT_BIT_SHIFT = 4
+  , CAMP_PORT_MASK  = 0x0070
+  , CAMP_PORT_NONE  = 0x0000
+  , CAMP_PORT_WOOD  = 0x0010
+  , CAMP_PORT_CLAY  = 0x0020
+  , CAMP_PORT_WOOL  = 0x0030
+  , CAMP_PORT_WHEAT = 0x0040
+  , CAMP_PORT_STONE = 0x0050
+  , CAMP_PORT_341   = 0x0060
+  ;
+
 $(function() {
   canvas = document.querySelector('canvas');
   draw = canvas.getContext('2d');
@@ -46,6 +58,7 @@ function lol()
   $.get('/game.json', function(data) {
     game = data;
     drawBoard();
+    lol();
   });
 }
 
@@ -82,22 +95,22 @@ function drawPorts()
 {
   var x, y, o;
 
-    drawPort(0, -1, 3);
+  drawPort(0, -1, 3, game.campSites[1 + 0 * (game.w+1)]);
 
-    drawPort(-1, 1, 2);
-    drawPort(2, -1, 4);
+  drawPort(-1, 1, 2, game.campSites[0 + 3 * (game.w+1)]);
+  drawPort(2, -1, 4, game.campSites[2 + 0 * (game.w+1)]);
 
-    drawPort(-1, 3, 2);
-    drawPort(4, 0, 4);
+  drawPort(-1, 3, 2, game.campSites[0 + 7 * (game.w+1)]);
+  drawPort(4, 0, 4, game.campSites[4 + 2 * (game.w+1)]);
 
-    drawPort(0, 5, 1);
-    drawPort(5, 2, 5);
+  drawPort(0, 5, 1, game.campSites[1 + 10 * (game.w+1)]);
+  drawPort(5, 2, 5, game.campSites[5 + 5 * (game.w+1)]);
 
-    drawPort(2, 5, 0);
-    drawPort(4, 4, 0);
+  drawPort(2, 5, 0, game.campSites[3 + 10 * (game.w+1)]);
+  drawPort(4, 4, 0, game.campSites[4 + 9 * (game.w+1)]);
 }
 
-function drawPort(x, y, side)
+function drawPort(x, y, side, port)
 {
   var n, stagger;
 
@@ -111,6 +124,8 @@ function drawPort(x, y, side)
 
   draw.globalAlpha = 1;
   draw.fillStyle = '#07f';
+  port = (port & CAMP_PORT_MASK) >> CAMP_PORT_BIT_SHIFT;
+  draw.fillStyle = portColors[port];
 
   draw.beginPath();
 

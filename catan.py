@@ -122,17 +122,15 @@ CAMP_SIZE_MASK  = 0x0008
 CAMP_SETTLEMENT = 0x0000
 CAMP_CITY       = 0x0008
 
-CAMP_PORT_MASK  = 0x00f0
+CAMP_PORT_BIT_SHIFT = 4
+CAMP_PORT_MASK  = 0x0070
 CAMP_PORT_NONE  = 0x0000
-CAMP_PORT_1     = 0x0010
-CAMP_PORT_2     = 0x0020
-CAMP_PORT_3     = 0x0030
-CAMP_PORT_4     = 0x0040
-CAMP_PORT_5     = 0x0050
-CAMP_PORT_6     = 0x0060
-CAMP_PORT_7     = 0x0070
-CAMP_PORT_8     = 0x0080
-CAMP_PORT_9     = 0x0090
+CAMP_PORT_WOOD  = 0x0010
+CAMP_PORT_CLAY  = 0x0020
+CAMP_PORT_WOOL  = 0x0030
+CAMP_PORT_WHEAT = 0x0040
+CAMP_PORT_STONE = 0x0050
+CAMP_PORT_341   = 0x0060
 
 CAMP_VOID       = 0x8000 # no player can settle here
 
@@ -248,17 +246,24 @@ class Catan:
     ]
 
   def initCampSites(self):
+    ports = [
+      CAMP_PORT_WOOD
+    , CAMP_PORT_CLAY
+    , CAMP_PORT_WOOL
+    , CAMP_PORT_WHEAT
+    , CAMP_PORT_STONE
+    , CAMP_PORT_341
+    , CAMP_PORT_341
+    , CAMP_PORT_341
+    , CAMP_PORT_341
+    ]
+
+    random.shuffle(ports)
+    a, b, c, d, e, f, g, h, i = ports
+
     o = CAMP_VOID
     z = CAMP_FREE
-    a = z | CAMP_PORT_1
-    b = z | CAMP_PORT_2
-    c = z | CAMP_PORT_3
-    d = z | CAMP_PORT_4
-    e = z | CAMP_PORT_5
-    f = z | CAMP_PORT_6
-    g = z | CAMP_PORT_7
-    h = z | CAMP_PORT_8
-    i = z | CAMP_PORT_9
+
     self.campSites = [
          o,    a,    b,    z,    o,    o,    o
     , o,    a,    z,    b,    z,    o,    o

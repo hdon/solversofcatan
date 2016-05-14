@@ -38,6 +38,7 @@ $(function() {
   draw.fillStyle = 'black';
   draw.fillRect(0, 0, 480, 480);
 
+  lol();
 });
 
 function lol()
@@ -45,7 +46,6 @@ function lol()
   $.get('/game.json', function(data) {
     game = data;
     drawBoard();
-    lol();
   });
 }
 
@@ -72,9 +72,61 @@ function drawBoard()
     }
   }
 
+  drawPorts();
   drawRoutes();
   drawCampsites();
   drawHands();
+}
+
+function drawPorts()
+{
+  var x, y, o;
+
+    drawPort(0, -1, 3);
+
+    drawPort(-1, 1, 2);
+    drawPort(2, -1, 4);
+
+    drawPort(-1, 3, 2);
+    drawPort(4, 0, 4);
+
+    drawPort(0, 5, 1);
+    drawPort(5, 2, 5);
+
+    drawPort(2, 5, 0);
+    drawPort(4, 4, 0);
+}
+
+function drawPort(x, y, side)
+{
+  var n, stagger;
+
+  stagger = y % 2;
+
+  if (stagger)
+    x += 0.5;
+
+  y *= 0.75;
+  x++; y++;
+
+  draw.globalAlpha = 1;
+  draw.fillStyle = '#07f';
+
+  draw.beginPath();
+
+  n = 0;
+  switch (side)
+  {
+                         case 0: draw.lineTo((x+0.00) * tileWidth, (y+0.25) * tileHeight);
+    if (++n == 2) break; case 1: draw.lineTo((x+0.50) * tileWidth, (y+0.00) * tileHeight);
+    if (++n == 2) break; case 2: draw.lineTo((x+1.00) * tileWidth, (y+0.25) * tileHeight);
+    if (++n == 2) break; case 3: draw.lineTo((x+1.00) * tileWidth, (y+0.75) * tileHeight);
+    if (++n == 2) break; case 4: draw.lineTo((x+0.50) * tileWidth, (y+1.00) * tileHeight);
+    if (++n == 2) break; case 5: draw.lineTo((x+0.00) * tileWidth, (y+0.75) * tileHeight);
+    if (++n == 2) break;         draw.lineTo((x+0.00) * tileWidth, (y+0.25) * tileHeight);
+  }
+  draw.lineTo((x+.5)*tileWidth, (y+.5)*tileHeight);
+  draw.fill();
 }
 
 function drawHands()

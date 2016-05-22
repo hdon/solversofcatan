@@ -87,11 +87,6 @@ LAND_ART = [
 ,   r'%s%s%svvv%s'   % (colorama.Fore.WHITE, colorama.Back.BLUE, colorama.Style.BRIGHT, FB_RESET)
 ]]
 
-class Settler:
-  def __init__(self, index):
-    self.resources = [0, 0, 0, 0, 0, 0]
-    self.index = index
-
 SAND = 0
 WOOD = 1
 CLAY = 2
@@ -165,8 +160,6 @@ class Catan:
     self.w = 6
     self.h = 5
     self.vh = (self.h + 1) * 2 # :(
-
-    self.players = map(Settler, xrange(4))
 
     # http://pop.h-cdn.co/assets/15/08/1424387153-catan.jpg
 

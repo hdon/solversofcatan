@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import BaseHTTPServer, SocketServer, json, os, catan, mimetypes
+import BaseHTTPServer, SocketServer, json, os, catan, mimetypes, random
 from bot import Bot
 port = 3000
 
@@ -18,7 +18,7 @@ class CatanHTTPRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
       self.path = '/index.html'
     if self.path == '/game.json':
 
-      if 0:
+      if random.random() >= 0.023:
         try:
           game.roll()
           game.activePlayer = game.activePlayer % 4 + 1

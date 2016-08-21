@@ -3,7 +3,7 @@ var tileHeight = 60, tileWidth = Math.sin(Math.PI / 3) * 60, tileFall = tileHeig
 var game;
 //var tileWidth = 60, tileHeight = 60;
 var tileColors = '#fc5 green #c33 #7c3 #cc2 #8c8c8c blue'.split(' ');
-var portColors = 'black #fc5 green #c33 #7c3 #cc2 #8c8c8c #07f'.split(' ');
+var portColors = 'black green #c33 #7c3 #cc2 #8c8c8c magenta'.split(' ');
 var playerColors = '#fff #f00 #0f0 #00f #c5c'.split(' ');
 
 var SAND = 0
